@@ -1,0 +1,33 @@
+workflows:
+  wb-hunter-android:
+    name: WB Hunter Android
+    max_build_duration: 60
+
+    scripts:
+      - name: Unpack Android project
+        script: |
+          set -e
+          rm -rf wb_android
+          unzip -o WBHunter_Android_GitHubReady_v1.zip
+
+      - name: Set Android SDK location
+        script: |
+          set -e
+          echo "sdk.dir=$ANDROID_SDK_ROOT" > "$CM_BUILD_DIR/wb_android/WBHunterAndroid/local.properties"
+
+      - name: Install Gradle 8.9
+        script: |
+          set -e
+          curl -L --retry 3 -o /tmp/gradle-8.9-bin.zip https://services.gradle.org/distributions/gradle-8.9-bin.zip
+          rm -rf "$HOME/gradle-8.9"
+          unzip -q /tmp/gradle-8.9-bin.zip -d "$HOME"
+
+      - name: Build WB Hunter APK
+        script: |
+          set -e
+          "$HOME/gradle-8.9/bin/gradle"             -p "$CM_BUILD_DIR/wb_android/WBHunterAndroid"             assembleDebug             --no-daemon
+          cp "$CM_BUILD_DIR/wb_android/WBHunterAndroid/app/build/outputs/apk/debug/app-debug.apk"              "$CM_BUILD_DIR/WB-Hunter.apk"
+
+    artifacts:
+      - WB-Hunter.apk
+      - wb_android/WBHunterAndroid/app/build/outputs/apk/debug/*.apk
